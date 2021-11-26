@@ -18,8 +18,7 @@ import (
 func TestDepositRoute(t *testing.T) {
 
 	longLivedBuyertoken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzc4OTc3OTgsIm5hbWUiOiJidXllciIsInJpZCI6MSwicm9sZSI6ImJ1eWVyIiwidWlkIjo2fQ.WqbpORAgMkWDT2qkn2KMZwDxkYcmG6Ef8ibiqbtkByY"
-	// Define a structure for specifying input and output data
-	// of a single test case
+
 	type payloadStruct struct {
 		Coin int `json:"coin"`
 	}
@@ -28,9 +27,8 @@ func TestDepositRoute(t *testing.T) {
 		route        string // route path to test
 		expectedCode int    // expected HTTP status code
 		payload      payloadStruct
-		token string
+		token        string
 	}{
-		// First test case
 		{
 			description:  "Test: is endpoint secured, get http status 400 ",
 			route:        "/deposit",
@@ -58,7 +56,6 @@ func TestDepositRoute(t *testing.T) {
 			},
 			token: longLivedBuyertoken,
 		},
-
 	}
 
 	// Define Fiber app.
@@ -78,7 +75,6 @@ func TestDepositRoute(t *testing.T) {
 	})
 	app.Post("deposit", jwtToken, handlers.Deposit)
 
-
 	// Iterate through test single test cases
 	for _, test := range tests {
 		// Create a new http request with the route from the test case
@@ -92,8 +88,6 @@ func TestDepositRoute(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer "+test.token)
 
 		// Perform the request plain with the app,
-		// the second argument is a request latency
-		// (set to -1 for no latency)
 		resp, err := app.Test(req, -1)
 		if err != nil {
 			log.Println(err)

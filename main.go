@@ -23,7 +23,6 @@ func main() {
 	database.Start()
 	database.Migrate()
 
-
 	routes.Routes(app)
 
 	app.Static("/", resourcesPath)

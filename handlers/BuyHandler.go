@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"mvpmatch/database"
 	"mvpmatch/models"
+	"strconv"
 	"strings"
 )
 
@@ -179,35 +180,36 @@ func Buy(c *fiber.Ctx) error {
 		return check(c, "", "no available coins", false, 400)
 	}
 
-	//log.Println(availableCoins)
-
-	//log.Println(buyer.Deposit)
-	//log.Println(totalCost)
-	//log.Println(change)
-	//log.Println(calculatedChange)
+	totalCoinAvailable := 0
+	for _, itemCoin := range availableCoins {
+		totalCoinAvailable = totalCoinAvailable + (itemCoin.Denomination * itemCoin.Count)
+	}
 
 	var changeSlice []int
+	changeSliceNew := make(map[int]int)
 
 	if change > 0 {
 		for _, item := range availableCoins {
-			if change == item.Denomination {
+			itemCount := item.Count
+
+			if (change == item.Denomination) && (itemCount > 0) {
 				change = change - item.Denomination
 				changeSlice = append(changeSlice, item.Denomination)
+				changeSliceNew[item.Denomination] = itemCount - 1
 			}
 
-			if change > item.Denomination {
-				change = change - item.Denomination
-				changeSlice = append(changeSlice, item.Denomination)
-			}
-
-			if change > item.Denomination {
-				change = change - item.Denomination
-				changeSlice = append(changeSlice, item.Denomination)
+			for i := 1; i < 5; i++ {
+				if (change > item.Denomination) && (itemCount > 0) {
+					change = change - item.Denomination
+					changeSlice = append(changeSlice, item.Denomination)
+					itemCount = itemCount - 1
+					changeSliceNew[item.Denomination] = itemCount
+				}
 			}
 		}
 
 		if len(changeSlice) == 0 {
-			return check(c, "","no coins available for change", false, 400)
+			return check(c, "", "no coins available for change", false, 400)
 		}
 
 		calculatedChange := 0
@@ -216,27 +218,37 @@ func Buy(c *fiber.Ctx) error {
 			calculatedChange = calculatedChange + eachChange
 		}
 
-		if calculatedChange < (buyer.Deposit - totalCost) {
-			return check(c, "","unable to sell product, insufficient change", false, 400)
+		if calculatedChange > (totalCoinAvailable - totalCost) {
+			return check(c, "", "unable to sell product, insufficient change", false, 400)
 		}
 
-
-		//process change for buyer
-		for _, denomination := range changeSlice {
-			//reduce denomination count by 1
-			var getDenomination models.Coin
-			newCount := getDenomination.Count - 1
-			db.Where(&models.Coin{Denomination: denomination}).First(&getDenomination)
-			updateCoin := db.Model(&models.Coin{})
-			updateCoin.Where(&models.Coin{Denomination: denomination})
-			updateCoin.Update("count",newCount)
+		var sqlQueryCase string
+		counter := 0
+		for key, value := range changeSliceNew {
+			if counter == 0 {
+				sqlQueryCase = " UPDATE coins SET count = CASE "
+				sqlQueryCase = sqlQueryCase + " WHEN denomination = " + strconv.Itoa(key) + " THEN '" + strconv.Itoa(value) + "'"
+			} else {
+				sqlQueryCase = sqlQueryCase + " WHEN denomination = " + strconv.Itoa(key) + " THEN '" + strconv.Itoa(value) + "'"
+			}
+			counter++
 		}
+		sqlQueryCase = sqlQueryCase + " END "
 
+		var changeSliceString string
+		for i, cs := range changeSlice {
+			if i == 0 {
+				changeSliceString = changeSliceString + "'" + strconv.Itoa(cs) + "'"
+			} else {
+				changeSliceString = changeSliceString + ",'" + strconv.Itoa(cs) + "'"
+			}
+
+		}
+		sqlQueryCase = sqlQueryCase + " WHERE denomination IN (" + changeSliceString + ")"
+		db.Exec(sqlQueryCase)
 	} else {
 		changeSlice = append(changeSlice, 0)
 	}
-
-
 
 	order := models.Order{
 		ProductID: input.ProductID,
@@ -254,7 +266,6 @@ func Buy(c *fiber.Ctx) error {
 	updateProduct := db.Model(&models.Product{})
 	updateProduct.Where(&models.Product{ID: input.ProductID})
 	updateProduct.Update("amount_available", productAmount)
-
 
 	//update user deposit
 	upDeposit := db.Model(&models.User{})

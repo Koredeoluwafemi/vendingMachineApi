@@ -12,7 +12,7 @@ type User struct {
 	Deposit   int
 	RoleID    uint
 	Role      Role
-	Deleted gorm.DeletedAt
+	Deleted   gorm.DeletedAt
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

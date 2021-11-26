@@ -11,6 +11,5 @@ var Role struct {
 
 func init() {
 	_ = env.Parse(&App)
-	_ = env.Parse(&Database)
 	_ = env.Parse(&Role)
 }

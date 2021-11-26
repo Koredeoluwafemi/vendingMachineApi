@@ -60,7 +60,7 @@ func AddProduct(c *fiber.Ctx) error {
 	var user models.User
 	row := db.First(&user, userID)
 	if row.RowsAffected == 0 {
-		return check(c,"","account no longer valid", false, 400)
+		return check(c, "", "account no longer valid", false, 400)
 	}
 
 	product := models.Product{
@@ -76,7 +76,7 @@ func AddProduct(c *fiber.Ctx) error {
 	}
 
 	output := fiber.Map{
-		"product_id": product.ID,
+		"product_id":       product.ID,
 		"name":             input.ProductName,
 		"amount_available": input.AmountAvailable,
 		"cost":             input.Cost,
@@ -97,11 +97,11 @@ func GetProducts(c *fiber.Ctx) error {
 	}
 
 	type list struct {
-		ID              uint    `json:"id"`
-		ProductName     string  `json:"product_name"`
-		AmountAvailable int     `json:"amount_available"`
-		Seller          string  `json:"seller"`
-		Cost            int `json:"cost"`
+		ID              uint   `json:"id"`
+		ProductName     string `json:"product_name"`
+		AmountAvailable int    `json:"amount_available"`
+		Seller          string `json:"seller"`
+		Cost            int    `json:"cost"`
 	}
 
 	var allResult []list

@@ -19,8 +19,6 @@ import (
 func TestProductRoute(t *testing.T) {
 
 	longLivedSellerToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzc5MzkxNTcsIm5hbWUiOiJzZWxsZXIxIiwicmlkIjoyLCJyb2xlIjoic2VsbGVyIiwidWlkIjo1fQ.LbNm77Bnf4mSfqpRuvVGeOb-nbFV1lh927kopU70gL0"
-	// Define a structure for specifying input and output data
-	// of a single test case
 	type payloadStruct struct {
 		AmountAvailable int    `json:"amount_available"`
 		Cost            int    `json:"cost"`
@@ -31,17 +29,16 @@ func TestProductRoute(t *testing.T) {
 		route        string // route path to test
 		expectedCode int    // expected HTTP status code
 		payload      payloadStruct
-		token string
+		token        string
 	}{
-		// First test case
 		{
 			description:  "Test: is endpoint secured, get http status 400 ",
 			route:        "/product",
 			expectedCode: 400,
 			payload: payloadStruct{
 				AmountAvailable: 34,
-				Cost: 0,
-				ProductName: "",
+				Cost:            0,
+				ProductName:     "",
 			},
 			token: "",
 		},
@@ -51,8 +48,8 @@ func TestProductRoute(t *testing.T) {
 			expectedCode: 201,
 			payload: payloadStruct{
 				AmountAvailable: 34,
-				Cost: 20,
-				ProductName: "product_name",
+				Cost:            20,
+				ProductName:     "product_name",
 			},
 			token: longLivedSellerToken,
 		},
@@ -62,8 +59,8 @@ func TestProductRoute(t *testing.T) {
 			expectedCode: 400,
 			payload: payloadStruct{
 				AmountAvailable: 34,
-				Cost: 20,
-				ProductName: "product_name",
+				Cost:            20,
+				ProductName:     "product_name",
 			},
 			token: longLivedSellerToken,
 		},
@@ -73,12 +70,11 @@ func TestProductRoute(t *testing.T) {
 			expectedCode: 400,
 			payload: payloadStruct{
 				AmountAvailable: 34,
-				Cost: 13,
-				ProductName: "prodd",
+				Cost:            13,
+				ProductName:     "prodd",
 			},
 			token: longLivedSellerToken,
 		},
-
 	}
 
 	// Define Fiber app.
@@ -98,7 +94,6 @@ func TestProductRoute(t *testing.T) {
 	})
 	app.Post("product", jwtToken, middleware.Seller, handlers.AddProduct)
 
-
 	// Iterate through test single test cases
 	for _, test := range tests {
 		// Create a new http request with the route from the test case
@@ -112,8 +107,6 @@ func TestProductRoute(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer "+test.token)
 
 		// Perform the request plain with the app,
-		// the second argument is a request latency
-		// (set to -1 for no latency)
 		resp, err := app.Test(req, -1)
 		if err != nil {
 			log.Println(err)

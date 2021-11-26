@@ -72,7 +72,7 @@ func Buyer(c *fiber.Ctx) error {
 
 func checkBlacklist(c *fiber.Ctx, claims jwt.MapClaims) (bool, error) {
 
-	client, err :=  database.ConnectRedis()
+	client, err := database.ConnectRedis()
 	if err != nil {
 		return false, errors.New("unable to verify token")
 	}
@@ -125,4 +125,3 @@ func TransToString(data interface{}) (res string) {
 	}
 	return
 }
-

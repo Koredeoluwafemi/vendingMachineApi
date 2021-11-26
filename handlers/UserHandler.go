@@ -21,6 +21,7 @@ type addUserInput struct {
 	Password string `json:"password"`
 	RoleID   uint   `json:"role_id"`
 }
+
 func (s addUserInput) Validate() error {
 	valid := validation.ValidateStruct(&s,
 		validation.Field(&s.Username, validation.Required),
@@ -63,8 +64,7 @@ func AddUser(c *fiber.Ctx) error {
 	user := models.User{
 		Username: input.Username,
 		Password: string(passwordHash),
-		//Deposit:   "",
-		RoleID: input.RoleID,
+		RoleID:   input.RoleID,
 	}
 
 	rows := db.Create(&user)
@@ -116,6 +116,7 @@ type editUserInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
 func (s editUserInput) Validate() error {
 	return validation.ValidateStruct(&s,
 		validation.Field(&s.Username, validation.Required),
@@ -150,7 +151,6 @@ func EditUser(c *fiber.Ctx) error {
 	updateUser := db.Model(&models.User{})
 	updateUser.Where(&models.User{ID: userID})
 
-
 	if input.Password != "" {
 		//create password hash
 		passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
@@ -167,7 +167,6 @@ func EditUser(c *fiber.Ctx) error {
 		return check(c, "", "unable to update user", false, 400)
 	}
 
-	//var user models.User
 	db.Where("id = ?", userID).Preload(clause.Associations).First(&user)
 
 	output := fiber.Map{
@@ -252,10 +251,12 @@ func GetRole(c *fiber.Ctx) error {
 
 	return check(c, allResult, "roles", true, 200)
 }
+
 type loginBody struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
+
 func (s loginBody) Validate() error {
 	var data error
 	data = validation.ValidateStruct(&s,
@@ -336,7 +337,6 @@ func Logintest(c *fiber.Ctx) error {
 	//user has been verified
 	hash := []byte(user.Password)
 	if err := bcrypt.CompareHashAndPassword(hash, []byte(input.Password)); err != nil {
-		// TODO: Properly handle error
 		return check(c, "", "Unable to login, credentials wrong", false, 401)
 	}
 
@@ -369,7 +369,7 @@ func Logout(c *fiber.Ctx) error {
 
 	tokenHeader := strings.Split(c.Get("Authorization"), " ")
 	if len(tokenHeader) != 2 {
-		return check(c,"","action invalid", false, 400)
+		return check(c, "", "action invalid", false, 400)
 	}
 	token := tokenHeader[1]
 
@@ -377,14 +377,6 @@ func Logout(c *fiber.Ctx) error {
 	if err != nil {
 		return check(c, err, err.Error(), false, 401)
 	}
-
-
-
-	//client := redis.NewClient(&redis.Options{
-	//	Addr:     "localhost:6379", // host:port of the redis server
-	//	Password: "", // no password set
-	//	DB:       0,  // use default DB
-	//})
 
 	client, err := database.ConnectRedis()
 	if err != nil {
@@ -395,14 +387,7 @@ func Logout(c *fiber.Ctx) error {
 	ctx := context.TODO()
 	userIDKey := strconv.Itoa(int(userID))
 
-	//expKey, err := getExpKey(c)
-	//if err != nil {
-	//	return check(c, err, err.Error(), false, 401)
-	//}
-	//t := time.Unix(expKey, 0)
-
 	client.Set(ctx, userIDKey, token, 0)
-
 
 	return check(c, "", "success", true, 200)
 }
