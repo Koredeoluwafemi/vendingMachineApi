@@ -90,16 +90,15 @@ func Deposit(c *fiber.Ctx) error {
 	rows = db.Where(&models.Coin{Denomination: input.Coin}).First(&isCoinExist)
 	if rows.RowsAffected == 0 {
 		//insert new coin
-		coinModel := models.Coin{
+		db.Create(&models.Coin{
 			Denomination: input.Coin,
 			Count:        1,
-		}
-		rows = db.Create(&coinModel)
+		})
 	} else {
 		//update coin count
-		updateCoin := db.Model(&models.Coin{})
-		updateCoin.Where("id = ?", isCoinExist.ID)
-		rows = updateCoin.Updates(models.Coin{Count: isCoinExist.Count + 1})
+		db.Model(&models.Coin{}).
+			Where("id = ?", isCoinExist.ID).
+			Updates(models.Coin{Count: isCoinExist.Count + 1})
 	}
 
 	db.Create(&wallet)
@@ -142,16 +141,16 @@ func Buy(c *fiber.Ctx) error {
 	if err := c.BodyParser(&input); err != nil {
 		return check(c, err, err.Error(), false, 400)
 	}
-
 	if err := input.Validate(); err != nil {
 		return check(c, err, err.Error(), false, 400)
 	}
 
 	//get buyer's deposit balance
-	var buyer models.User
+	var (
+		buyer   models.User
+		product models.Product
+	)
 	db.First(&buyer, userID)
-
-	var product models.Product
 	db.First(&product, input.ProductID)
 
 	totalCost := product.Cost * input.Amount

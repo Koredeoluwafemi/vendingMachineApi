@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	Port       = "3306"
-	Host       = "127.0.0.1"
-	Database   = "mvpmatch"
-	Username   = "root"
-	Password   = "root"
+	Port     = "3306"
+	Host     = "127.0.0.1"
+	Database = "mvpmatch"
+	Username = "root"
+	Password = "koreroot"
 )
 
 var DB *gorm.DB
